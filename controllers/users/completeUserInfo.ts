@@ -1,15 +1,15 @@
 import express, { Request, Response } from "express";
-import connection from "../../../db/db";
+import connection from "../../db/db";
 import { UploadApiResponse } from "cloudinary";
 
 // for sending files as form data
 import multer from "multer";
-import { upload } from "../../../multer/multer";
-import cloudinary from "../../../cloudinary/cloudinary";
-import getUserIDFromToken from "../../global/getUserIdFromToken";
+import { upload } from "../../multer/multer";
+import cloudinary from "../../cloudinary/cloudinary";
+import getUserIDFromToken from "../global/getUserIdFromToken";
 
 // create new post to mySQL database
-export const createUserInfo = async (
+export const completeUserInfo = async (
   //good
   req: Request,
   res: Response
@@ -46,10 +46,8 @@ export const createUserInfo = async (
 
     // create post object
     const post = {
+      users_phone_number: req.body.user_phone_number,
       user_img: result.secure_url,
-      user_phone_number: req.body.user_phone_number,
-      user_email: req.body.user_email,
-      user_id,
     };
 
     if (!post) {
@@ -57,11 +55,15 @@ export const createUserInfo = async (
     }
 
     // send post to mySQL database
-    connection.query("INSERT INTO users_info SET ?", post, (err, result) => {
-      if (err) {
-        console.log(err);
+    connection.query(
+      "UPDATE users SET users_phone_number = ?, user_img = ? WHERE user_id = ? ",
+      [post.users_phone_number, post.user_img, user_id],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        res.status(200).json({ message: result });
       }
-      res.status(200).json({ message: result });
-    });
+    );
   });
 };

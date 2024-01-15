@@ -6,6 +6,7 @@ import { UploadApiResponse } from "cloudinary";
 import multer from "multer";
 import { upload } from "../../multer/multerVideo";
 import cloudinary from "../../cloudinary/cloudinary";
+import getUserIDFromToken from "../global/getUserIdFromToken";
 
 // create new post to mySQL database
 export const createShortVideo = async (
@@ -13,8 +14,15 @@ export const createShortVideo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const user_id = getUserIDFromToken(req);
+
+  if (!user_id) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
   upload.single("video")(req, res, async (err) => {
-    if (err) {
+    if (err instanceof multer.MulterError) {
       console.log(err);
     }
     // create uniqueIdentifier for the image
@@ -39,13 +47,11 @@ export const createShortVideo = async (
       })) as UploadApiResponse;
 
     // create post object
+    //likes shouldn't be passed at upload time
     const post = {
       video: result.secure_url,
       detail: req.body.detail,
-      creator: req.body.creator,
-      comments: req.body.comments,
-      likes: req.body.likes,
-      views: req.body.views,
+      user_id,
     };
 
     // send post to mySQL database

@@ -17,7 +17,7 @@ export const getStoryByUserId: express.RequestHandler = async (
           .status(500)
           .json({ error: "Error fetching data. Try again later." });
       } else if (result.length < 1) {
-        res.status(404).json({ error: "No story found. Post one now." });
+        res.status(200).json({ message: "No story found. Post one now." });
       } else {
         res.status(200).json({ stories: result });
       }

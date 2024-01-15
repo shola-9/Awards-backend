@@ -20,8 +20,8 @@ export const getClubPostByUserId: express.RequestHandler = async (
             .json({ error: "Failed to fetch club from database" });
         } else if (result.length < 1) {
           res
-            .status(404)
-            .json({ message: "You have no posts yet. Post one now" });
+            .status(200)
+            .json({ message: "You have no group posts yet. Post one now" });
         } else {
           res.status(200).json({ clubPosts: result });
         }

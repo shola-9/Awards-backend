@@ -8,10 +8,10 @@ export const getUserInfo: express.RequestHandler = async (
 ) => {
   const user_id = getUserIDFromToken(req);
 
-  if (!user_id) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+  // if (!user_id) {
+  //   res.status(401).json({ error: "Unauthorized" });
+  //   return;
+  // }
 
   try {
     connection.query(

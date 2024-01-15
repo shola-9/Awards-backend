@@ -2,16 +2,14 @@ import express, { Request, Response } from "express";
 import connection from "../../db/db";
 
 export const getFullInfo: express.RequestHandler = async (
-  //good
   req: Request,
   res: Response
 ) => {
-  // get the id from the query
-  const video_id = Number(req.query.video_id);
-
   connection.query(
-    "SELECT short_videos_id, video, detail, creator, likes, views, created_at, TIMESTAMPDIFF(YEAR, created_at, NOW()) AS years_ago, TIMESTAMPDIFF(MONTH, created_at, NOW()) AS months_ago, TIMESTAMPDIFF(DAY, created_at, NOW()) AS days_ago, TIMESTAMPDIFF(HOUR, created_at, NOW()) AS hours_ago, TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS minutes_ago, TIMESTAMPDIFF(SECOND, created_at, NOW()) AS seconds_ago FROM short_videos ORDER BY short_videos_id = 3 DESC, short_videos_id",
-    [video_id],
+    `
+    SELECT sv.short_videos_id, sv.video, sv.detail, sv.likes, sv.views, sv.created_at, u.username, TIMESTAMPDIFF(YEAR, sv.created_at, NOW()) AS years_ago, TIMESTAMPDIFF(MONTH, sv.created_at, NOW()) AS months_ago, TIMESTAMPDIFF(DAY, sv.created_at, NOW()) AS days_ago, TIMESTAMPDIFF(HOUR, sv.created_at, NOW()) AS hours_ago, TIMESTAMPDIFF(MINUTE, sv.created_at, NOW()) AS minutes_ago, TIMESTAMPDIFF(SECOND, sv.created_at, NOW()) AS seconds_ago,GROUP_CONCAT(rc.reels_comments_id) AS comment_ids,GROUP_CONCAT(rc.user_comment) AS comments,GROUP_CONCAT(rc.user_id) AS comment_user_ids FROM short_videos sv JOIN users u ON sv.user_id = u.user_id LEFT JOIN reels_comments rc ON sv.short_videos_id = rc.short_video_id GROUP BY sv.short_videos_id ORDER BY  sv.short_videos_id DESC
+
+    `,
     (err, result) => {
       if (err) {
         console.log(err);
