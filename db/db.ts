@@ -9,7 +9,7 @@ dotenv.config();
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "RufusTolu,5#",
   database: "award",
 });
 

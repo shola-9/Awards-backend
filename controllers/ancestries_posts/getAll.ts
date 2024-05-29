@@ -7,7 +7,7 @@ export const getAllAncestriesPosts: express.RequestHandler = async (
 ): Promise<void> => {
   try {
     connection.query(
-      `
+      ` 
       SELECT 
     ap.ancestries_postid, ap.post_heading, ap.post_sub_heading, TIMESTAMPDIFF(YEAR, age, CURDATE()) AS age, ap.sex, ap.email
     , ap.address, ap.state, ap.nationality, ap.date_year, ap.content,

@@ -9,6 +9,7 @@ import { completeUserInfo } from "../controllers/users/completeUserInfo";
 import { getUserInfo } from "../controllers/users/usersInfo/getUserInfo";
 import { logout } from "../controllers/users/logOut";
 import changePassword from "../controllers/users/changePassword";
+import { privilegeCheck } from "../controllers/users/privilege";
 
 // route path and function
 router.post("/", createUser);
@@ -18,6 +19,7 @@ router.post("/completeUserInfo", completeUserInfo);
 router.get("/getUserInfo", getUserInfo);
 router.post("/logout", logout);
 router.post("/changePassword", changePassword);
+router.get("/privilegeCheck", privilegeCheck);
 
 // export router
 export default router;

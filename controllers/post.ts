@@ -5,6 +5,8 @@ import connection from "../db/db";
 import multer from "multer";
 import { upload } from "../multer/multer";
 import cloudinary from "../cloudinary/cloudinary";
+import getUserIdFromToken from "./global/getUserIdFromToken";
+import DOMPurify from "isomorphic-dompurify";
 
 // create new post to mySQL database
 export const createPost = async (
@@ -12,44 +14,88 @@ export const createPost = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  upload.single("picture")(req, res, async (err) => {
-    if (err) {
-      console.log(err);
-    }
-    // create uniqueIdentifier for the image
-    const uniqueIdentifier = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  const user_id = getUserIdFromToken(req);
 
-    // create publicId for the image for cloudinary
-    const publicId = `image-${uniqueIdentifier}`;
+  // check the user privilege
+  if (!user_id) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
 
-    // handle if no req.file
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    // upload to cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      public_id: publicId,
+  try {
+    const checkPrivilege = await new Promise((resolve, reject) => {
+      connection.query(
+        `
+        SELECT * FROM users WHERE privilege = 'eadmin' AND user_id = ?
+        `,
+        [user_id],
+        (err, result) => {
+          if (err) {
+            console.error(err);
+            reject(false);
+            return;
+          } else if (result.length === 0) {
+            reject(false);
+            return;
+          } else resolve(true);
+        }
+      );
     });
 
-    // create post object
-    const post = {
-      name: req.body.name,
-      sub_heading: req.body.sub_heading,
-      post: req.body.post,
-      year: req.body.year,
-      tag: req.body.tag,
-      picture: result.secure_url,
-    };
+    if (!checkPrivilege) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    } else {
+      upload.single("picture")(req, res, async (err) => {
+        if (err) {
+          console.log(err);
+        }
+        // create uniqueIdentifier for the image
+        const uniqueIdentifier =
+          Date.now() + "-" + Math.round(Math.random() * 1e9);
 
-    // send post to mySQL database
-    connection.query("INSERT INTO posts SET ?", post, (err, result) => {
-      if (err) {
-        console.log(err);
-      }
-      res.status(200).json({ message: result });
-    });
-  });
+        // create publicId for the image for cloudinary
+        const publicId = `image-${uniqueIdentifier}`;
+
+        // handle if no req.file
+        if (!req.file) {
+          return res.status(400).json({ error: "No file uploaded" });
+        }
+
+        // upload to cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          public_id: publicId,
+        });
+
+        const clean = DOMPurify.sanitize(req.body.post);
+        // create post object
+        const post = {
+          name: req.body.name,
+          sub_heading: req.body.sub_heading,
+          post: clean,
+          year: req.body.year,
+          tag: req.body.tag,
+          picture: result.secure_url,
+        };
+
+        console.log(post);
+
+        // send post to mySQL database
+        connection.query("INSERT INTO posts SET ?", post, (err, result) => {
+          if (err) {
+            console.log(err);
+          }
+          res
+            .status(200)
+            .setHeader("Content-Type", "text/html")
+            .json({ message: result });
+        });
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 export const getWinnersOnHomePage: express.RequestHandler = async (
